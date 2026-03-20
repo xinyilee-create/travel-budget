@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Voyage Budget Calculator</title>
+    <title>Voyage Budget Dashboard</title>
     <meta
       name="description"
-      content="旅費計算機，快速整理機票、住宿、交通、門票、eSIM 與雜支預算。"
+      content="手機友善旅費儀表板，支援快速記帳、匯率換算、香港與泰國分段統計。"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,154 +17,230 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="gradient gradient-a"></div>
-    <div class="gradient gradient-b"></div>
-    <div class="grid-overlay"></div>
+    <div class="glow glow-left"></div>
+    <div class="glow glow-right"></div>
+    <div class="mesh"></div>
 
     <main class="app-shell">
       <section class="hero-card">
         <div class="hero-copy">
-          <p class="eyebrow">Travel Finance Tool</p>
-          <h1>Voyage Budget Calculator</h1>
+          <p class="eyebrow">Mobile Budget OS</p>
+          <h1>Voyage Budget Dashboard</h1>
           <p class="hero-text">
-            把機票、住宿、門票、eSIM、交通與現金預算集中在同一頁，快速知道整趟旅程大概要花多少。
+            適合旅行中邊走邊記。刷卡、現金、門票、eSIM 都能快速記錄，並自動換算成台幣總額。
           </p>
         </div>
 
-        <div class="hero-stats">
-          <article>
-            <span>固定支出</span>
-            <strong id="fixedTotal">$0</strong>
-          </article>
-          <article>
-            <span>預估現金花費</span>
-            <strong id="cashTotal">$0</strong>
-          </article>
-          <article>
-            <span>旅程總預估</span>
-            <strong id="grandTotal">$0</strong>
-          </article>
-        </div>
-
         <div class="hero-actions">
+          <button class="ghost-button" id="loadSampleButton" type="button">載入範例</button>
           <button class="ghost-button" id="exportButton" type="button">匯出資料</button>
           <label class="ghost-button import-button" for="importInput">匯入資料</label>
           <input id="importInput" type="file" accept="application/json" hidden />
         </div>
+
+        <div class="stat-grid">
+          <article class="stat-card">
+            <span>總預估</span>
+            <strong id="grandTotal">NT$0</strong>
+          </article>
+          <article class="stat-card">
+            <span>固定支出</span>
+            <strong id="fixedTotal">NT$0</strong>
+          </article>
+          <article class="stat-card">
+            <span>現金預備金</span>
+            <strong id="cashReserveTotal">NT$0</strong>
+          </article>
+          <article class="stat-card">
+            <span>目前筆數</span>
+            <strong id="entryCount">0</strong>
+          </article>
+        </div>
       </section>
 
-      <section class="dashboard">
-        <section class="panel planner-panel">
+      <section class="quick-add-card panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Quick Add</p>
+            <h2>手機快速記帳</h2>
+          </div>
+          <p class="inline-note" id="quickStatus">新增後會立刻更新總額與分區統計。</p>
+        </div>
+
+        <form id="expenseForm" class="quick-form">
+          <div class="mobile-grid">
+            <label class="field field-wide">
+              <span>項目名稱</span>
+              <input id="expenseName" name="expenseName" type="text" placeholder="例如：airport train / brunch / massage" required />
+            </label>
+
+            <label class="field">
+              <span>地區</span>
+              <select id="expenseRegion" name="expenseRegion">
+                <option value="HK">Hong Kong</option>
+                <option value="TH">Thailand</option>
+                <option value="General">General</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>分類</span>
+              <select id="expenseCategory" name="expenseCategory">
+                <option value="transport">transport</option>
+                <option value="accommodation">accommodation</option>
+                <option value="ticket">ticket</option>
+                <option value="connectivity">connectivity</option>
+                <option value="food">food</option>
+                <option value="shopping">shopping</option>
+                <option value="misc">misc</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>原幣別</span>
+              <select id="expenseCurrency" name="expenseCurrency">
+                <option value="TWD">TWD</option>
+                <option value="HKD">HKD</option>
+                <option value="THB">THB</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>原金額</span>
+              <input id="expenseAmount" name="expenseAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="120" required />
+            </label>
+
+            <label class="field">
+              <span>支付方式</span>
+              <select id="expenseMethod" name="expenseMethod">
+                <option value="card">card</option>
+                <option value="cash">cash</option>
+              </select>
+            </label>
+          </div>
+
+          <button class="primary-button quick-submit" type="submit">快速新增</button>
+        </form>
+      </section>
+
+      <section class="dashboard-grid">
+        <section class="panel settings-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Trip Setup</p>
-              <h2>旅程設定</h2>
+              <h2>旅程設定與匯率</h2>
             </div>
           </div>
 
-          <form class="trip-form" id="tripForm">
+          <div class="trip-switcher">
+            <label class="field trip-select-field">
+              <span>目前旅程</span>
+              <select id="tripSelector"></select>
+            </label>
+            <button class="ghost-button" id="newTripButton" type="button">新增旅程</button>
+          </div>
+
+          <form id="tripForm" class="settings-form">
             <label class="field">
               <span>旅程名稱</span>
-              <input id="tripName" type="text" placeholder="例如：Hong Kong + Thailand" />
+              <input id="tripName" type="text" placeholder="例如：HK + Thailand" />
             </label>
             <label class="field">
-              <span>幣別</span>
-              <input id="currency" type="text" placeholder="例如：NT$" />
+              <span>主顯示幣別</span>
+              <input id="displayCurrency" type="text" value="NT$" />
             </label>
             <label class="field">
-              <span>現金預備金</span>
-              <input id="cashBuffer" type="number" min="0" step="100" placeholder="3000" />
+              <span>現金預備金（台幣）</span>
+              <input id="cashReserve" type="number" min="0" step="100" placeholder="6000" />
+            </label>
+            <label class="field">
+              <span>HKD -> TWD</span>
+              <input id="hkdRate" type="number" min="0" step="0.001" placeholder="4.07" />
+            </label>
+            <label class="field">
+              <span>THB -> TWD</span>
+              <input id="thbRate" type="number" min="0" step="0.001" placeholder="0.95" />
             </label>
           </form>
 
-          <div class="summary-grid">
+          <div class="summary-mini-grid">
             <article>
-              <span>旅程標題</span>
-              <strong id="summaryTitle">My Trip</strong>
+              <span>旅程</span>
+              <strong id="summaryTrip">My Trip</strong>
             </article>
             <article>
-              <span>支出項目數</span>
-              <strong id="summaryCount">0 items</strong>
+              <span>刷卡支出</span>
+              <strong id="cardTotal">NT$0</strong>
             </article>
             <article>
-              <span>最高單筆</span>
-              <strong id="summaryLargest">$0</strong>
-            </article>
-            <article>
-              <span>現金預備金</span>
-              <strong id="summaryBuffer">$0</strong>
+              <span>現金支出</span>
+              <strong id="cashSpentTotal">NT$0</strong>
             </article>
           </div>
         </section>
 
-        <section class="panel expenses-panel">
+        <section class="panel region-panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Budget Items</p>
-              <h2>支出項目</h2>
+              <p class="eyebrow">Regional Split</p>
+              <h2>香港 / 泰國</h2>
             </div>
-            <button class="primary-button" id="loadSampleButton" type="button">載入範例</button>
           </div>
 
-          <form class="expense-form" id="expenseForm">
-            <div class="expense-grid">
-              <label class="field">
-                <span>項目名稱</span>
-                <input id="expenseName" name="expenseName" type="text" placeholder="例如：flight ticket (TP-HK)" required />
-              </label>
-
-              <label class="field">
-                <span>分類</span>
-                <select id="expenseCategory" name="expenseCategory">
-                  <option value="transport">transport</option>
-                  <option value="accommodation">accommodation</option>
-                  <option value="ticket">ticket</option>
-                  <option value="connectivity">connectivity</option>
-                  <option value="gear">gear</option>
-                  <option value="food">food</option>
-                  <option value="misc">misc</option>
-                </select>
-              </label>
-
-              <label class="field">
-                <span>金額</span>
-                <input id="expenseAmount" name="expenseAmount" type="number" min="0" step="1" placeholder="3863" required />
-              </label>
-            </div>
-
-            <div class="form-actions">
-              <p class="inline-note" id="expenseStatus">新增後會自動更新總額與分類小計。</p>
-              <button class="primary-button" type="submit">加入項目</button>
-            </div>
-          </form>
-
-          <div class="expense-list" id="expenseList"></div>
-        </section>
-
-        <section class="panel analytics-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Breakdown</p>
-              <h2>分類統計</h2>
-            </div>
+          <div class="region-cards">
+            <article class="region-card region-hk">
+              <p>Hong Kong</p>
+              <strong id="hkTotal">NT$0</strong>
+              <span id="hkCount">0 items</span>
+            </article>
+            <article class="region-card region-th">
+              <p>Thailand</p>
+              <strong id="thTotal">NT$0</strong>
+              <span id="thCount">0 items</span>
+            </article>
+            <article class="region-card region-general">
+              <p>General</p>
+              <strong id="generalTotal">NT$0</strong>
+              <span id="generalCount">0 items</span>
+            </article>
           </div>
 
           <div class="category-list" id="categoryList"></div>
+        </section>
 
-          <div class="budget-card">
-            <p class="eyebrow">Quick Estimate</p>
-            <div class="estimate-row">
-              <span>固定支出</span>
-              <strong id="estimateFixed">$0</strong>
+        <section class="panel ledger-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Expense Feed</p>
+              <h2>支出流水</h2>
             </div>
-            <div class="estimate-row">
-              <span>現金預備金</span>
-              <strong id="estimateBuffer">$0</strong>
-            </div>
-            <div class="estimate-row estimate-total">
-              <span>總預估</span>
-              <strong id="estimateGrand">$0</strong>
-            </div>
+            <p class="inline-note">直接分區看香港、泰國和共用支出，不用來回切換。</p>
+          </div>
+
+          <div class="expense-sections">
+            <section class="expense-region-block">
+              <div class="expense-region-heading">
+                <h3>Hong Kong</h3>
+                <span id="hkSectionMeta">0 items</span>
+              </div>
+              <div class="expense-feed grouped-feed" id="hkExpenseList"></div>
+            </section>
+
+            <section class="expense-region-block">
+              <div class="expense-region-heading">
+                <h3>Thailand</h3>
+                <span id="thSectionMeta">0 items</span>
+              </div>
+              <div class="expense-feed grouped-feed" id="thExpenseList"></div>
+            </section>
+
+            <section class="expense-region-block">
+              <div class="expense-region-heading">
+                <h3>General</h3>
+                <span id="generalSectionMeta">0 items</span>
+              </div>
+              <div class="expense-feed grouped-feed" id="generalExpenseList"></div>
+            </section>
           </div>
         </section>
       </section>
@@ -172,14 +248,17 @@
 
     <template id="expenseItemTemplate">
       <article class="expense-item">
-        <div class="expense-main">
+        <div class="expense-top">
           <div>
             <h3 class="expense-name"></h3>
-            <p class="expense-category"></p>
+            <p class="expense-meta"></p>
           </div>
+          <button class="ghost-button expense-remove" type="button">刪除</button>
+        </div>
+        <div class="expense-bottom">
+          <span class="expense-original"></span>
           <strong class="expense-amount"></strong>
         </div>
-        <button class="ghost-button expense-remove" type="button">刪除</button>
       </article>
     </template>
 
