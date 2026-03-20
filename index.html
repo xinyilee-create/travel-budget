@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voyage Budget Calculator</title>
+    <meta
+      name="description"
+      content="旅費計算機，快速整理機票、住宿、交通、門票、eSIM 與雜支預算。"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="gradient gradient-a"></div>
+    <div class="gradient gradient-b"></div>
+    <div class="grid-overlay"></div>
+
+    <main class="app-shell">
+      <section class="hero-card">
+        <div class="hero-copy">
+          <p class="eyebrow">Travel Finance Tool</p>
+          <h1>Voyage Budget Calculator</h1>
+          <p class="hero-text">
+            把機票、住宿、門票、eSIM、交通與現金預算集中在同一頁，快速知道整趟旅程大概要花多少。
+          </p>
+        </div>
+
+        <div class="hero-stats">
+          <article>
+            <span>固定支出</span>
+            <strong id="fixedTotal">$0</strong>
+          </article>
+          <article>
+            <span>預估現金花費</span>
+            <strong id="cashTotal">$0</strong>
+          </article>
+          <article>
+            <span>旅程總預估</span>
+            <strong id="grandTotal">$0</strong>
+          </article>
+        </div>
+
+        <div class="hero-actions">
+          <button class="ghost-button" id="exportButton" type="button">匯出資料</button>
+          <label class="ghost-button import-button" for="importInput">匯入資料</label>
+          <input id="importInput" type="file" accept="application/json" hidden />
+        </div>
+      </section>
+
+      <section class="dashboard">
+        <section class="panel planner-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Trip Setup</p>
+              <h2>旅程設定</h2>
+            </div>
+          </div>
+
+          <form class="trip-form" id="tripForm">
+            <label class="field">
+              <span>旅程名稱</span>
+              <input id="tripName" type="text" placeholder="例如：Hong Kong + Thailand" />
+            </label>
+            <label class="field">
+              <span>幣別</span>
+              <input id="currency" type="text" placeholder="例如：NT$" />
+            </label>
+            <label class="field">
+              <span>現金預備金</span>
+              <input id="cashBuffer" type="number" min="0" step="100" placeholder="3000" />
+            </label>
+          </form>
+
+          <div class="summary-grid">
+            <article>
+              <span>旅程標題</span>
+              <strong id="summaryTitle">My Trip</strong>
+            </article>
+            <article>
+              <span>支出項目數</span>
+              <strong id="summaryCount">0 items</strong>
+            </article>
+            <article>
+              <span>最高單筆</span>
+              <strong id="summaryLargest">$0</strong>
+            </article>
+            <article>
+              <span>現金預備金</span>
+              <strong id="summaryBuffer">$0</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel expenses-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Budget Items</p>
+              <h2>支出項目</h2>
+            </div>
+            <button class="primary-button" id="loadSampleButton" type="button">載入範例</button>
+          </div>
+
+          <form class="expense-form" id="expenseForm">
+            <div class="expense-grid">
+              <label class="field">
+                <span>項目名稱</span>
+                <input id="expenseName" name="expenseName" type="text" placeholder="例如：flight ticket (TP-HK)" required />
+              </label>
+
+              <label class="field">
+                <span>分類</span>
+                <select id="expenseCategory" name="expenseCategory">
+                  <option value="transport">transport</option>
+                  <option value="accommodation">accommodation</option>
+                  <option value="ticket">ticket</option>
+                  <option value="connectivity">connectivity</option>
+                  <option value="gear">gear</option>
+                  <option value="food">food</option>
+                  <option value="misc">misc</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>金額</span>
+                <input id="expenseAmount" name="expenseAmount" type="number" min="0" step="1" placeholder="3863" required />
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <p class="inline-note" id="expenseStatus">新增後會自動更新總額與分類小計。</p>
+              <button class="primary-button" type="submit">加入項目</button>
+            </div>
+          </form>
+
+          <div class="expense-list" id="expenseList"></div>
+        </section>
+
+        <section class="panel analytics-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Breakdown</p>
+              <h2>分類統計</h2>
+            </div>
+          </div>
+
+          <div class="category-list" id="categoryList"></div>
+
+          <div class="budget-card">
+            <p class="eyebrow">Quick Estimate</p>
+            <div class="estimate-row">
+              <span>固定支出</span>
+              <strong id="estimateFixed">$0</strong>
+            </div>
+            <div class="estimate-row">
+              <span>現金預備金</span>
+              <strong id="estimateBuffer">$0</strong>
+            </div>
+            <div class="estimate-row estimate-total">
+              <span>總預估</span>
+              <strong id="estimateGrand">$0</strong>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <template id="expenseItemTemplate">
+      <article class="expense-item">
+        <div class="expense-main">
+          <div>
+            <h3 class="expense-name"></h3>
+            <p class="expense-category"></p>
+          </div>
+          <strong class="expense-amount"></strong>
+        </div>
+        <button class="ghost-button expense-remove" type="button">刪除</button>
+      </article>
+    </template>
+
+    <script src="script.js"></script>
+  </body>
+</html>
